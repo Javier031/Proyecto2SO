@@ -34,7 +34,7 @@ Luego muestra una interfaz  con estos paneles fijos:
 
 ## 3. Instalacion y ejecución
 
-```bash
+
 # 1) Clonar (o descargar el zip)
 git clone https://github.com/Javier031/Proyecto2SO.git
 cd Proyecto2SO/Proyecto2SO
