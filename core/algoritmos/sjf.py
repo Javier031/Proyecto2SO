@@ -1,63 +1,46 @@
+import heapq
 from .base import Estrategia
 
 class SJF(Estrategia):
     """
-    Algoritmo de planificación SJF (Shortest Job First) - No expropiativo.
-    Selecciona siempre el proceso con el menor tiempo de CPU de la cola de listos.
+    SJF no expropiativo con llegadas:
+    - Entre los procesos que YA llegaron, elige el de menor duración (CPU).
+    - Empates: primero por llegada (menor t0), luego por orden de inserción.
     """
-
     def __init__(self, qdef=2):
         super().__init__(qdef)
-        self.ready_queue = []  # Cola de procesos listos
+        self.ready = []
+        self._ord = 0  # para desempate estable
 
     def add(self, p):
-        """
-        Agregar un proceso a la cola de listos.
-        """
-        self.ready_queue.append(p)
-        # Ordenamos por tiempo de CPU requerido (menor primero)
-        self.ready_queue.sort(key=lambda x: x.tiempo_cpu)
+        self._ord += 1
+        # ⚠️ CLAVE: duración primero, luego llegada, luego orden de alta
+        heapq.heappush(self.ready, (p.duracion, p.llegada, self._ord, p))
 
     def elegir(self, actual):
-        """
-        Elegir el siguiente proceso a ejecutar.
-        Retorna el proceso con menor tiempo de CPU de la cola.
-        """
-        if self.ready_queue:
-            return self.ready_queue.pop(0)
+        # No expropiativo: si hay proceso en CPU, continúa
+        if actual is not None:
+            return actual
+        # CPU libre: toma el de menor duración de los que YA llegaron (el Planificador garantiza esto)
+        if self.ready:
+            return heapq.heappop(self.ready)[3]
         return None
 
     def pre_tick(self, actual):
-        """
-        Operaciones antes de cada tick de CPU.
-        Para SJF no expropiativo no es necesario nada especial aquí.
-        """
         pass
 
     def post_tick(self, actual):
-        """
-        Operaciones después de cada tick de CPU.
-        Para SJF no expropiativo no se requiere lógica adicional.
-        """
-        pass
+        # Termina cuando restante llega a 0; nunca hay expropiación en SJF
+        return (actual.terminado, False)
 
     def reinsertar(self, p):
-        """
-        Reinsertar un proceso a la cola de listos.
-        (Si aún no terminó o debe volver a esperar).
-        """
+        # En SJF no debería llamarse, pero lo dejamos seguro
         self.add(p)
 
     def peek_ready(self):
-        """
-        Ver la cola de listos sin modificarla.
-        """
-        return list(self.ready_queue)
+        return [t[3] for t in self.ready]
 
     def dump_ready(self):
-        """
-        Vaciar la cola y devolver los procesos.
-        """
-        procesos = list(self.ready_queue)
-        self.ready_queue.clear()
-        return procesos
+        out = [t[3] for t in self.ready]
+        self.ready.clear()
+        return out
