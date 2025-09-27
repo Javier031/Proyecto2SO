@@ -15,3 +15,4 @@ class SRTF(Estrategia):
     def reinsertar(self, p): ...
     def peek_ready(self): return []
     def dump_ready(self): return []
+        
